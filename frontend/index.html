@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SPARK — Student Idea Validation Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131c;
+    --card: #1a1a28;
+    --border: #2a2a40;
+    --accent: #f0c040;
+    --accent2: #7c5cfc;
+    --text: #e8e8f0;
+    --muted: #6e6e90;
+    --success: #3ecf8e;
+    --danger: #ff6b6b;
+    --pending: #f0c040;
+    --active: #3ecf8e;
+    --shortlisted: #7c5cfc;
+    --funded: #3ecf8e;
+    --rejected: #ff6b6b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAVBAR ─── */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--accent); }
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 18px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface); }
+  .nav-tab.active {
+    color: var(--accent);
+    background: rgba(240,192,64,0.08);
+    border-color: rgba(240,192,64,0.25);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 60px 2rem 48px;
+  }
+  .hero-tag {
+    display: inline-block;
+    padding: 4px 14px;
+    background: rgba(124,92,252,0.15);
+    border: 1px solid rgba(124,92,252,0.3);
+    border-radius: 20px;
+    font-size: 0.78rem;
+    color: #a98eff;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem 80px;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: rgba(124,92,252,0.3); }
+
+  /* ─── FORM ─── */
+  .form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .form-header-icon {
+    width: 40px; height: 40px;
+    background: rgba(240,192,64,0.12);
+    border: 1px solid rgba(240,192,64,0.25);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+  .form-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  .form-header p { font-size: 0.85rem; color: var(--muted); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .field input,
+  .field textarea,
+  .field select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(124,92,252,0.12);
+  }
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field select option { background: var(--card); }
+
+  .char-count { font-size: 0.75rem; color: var(--muted); text-align: right; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0f;
+  }
+  .btn-primary:hover { background: #f5d060; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(240,192,64,0.3); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+  .btn-danger {
+    background: rgba(255,107,107,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(255,107,107,0.25);
+  }
+  .btn-danger:hover { background: rgba(255,107,107,0.2); }
+
+  /* ─── TOAST ─── */
+  .toast-wrap {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 240px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .toast-success { background: rgba(62,207,142,0.15); border: 1px solid rgba(62,207,142,0.3); color: var(--success); }
+  .toast-error   { background: rgba(255,107,107,0.15); border: 1px solid rgba(255,107,107,0.3); color: var(--danger); }
+  .toast-info    { background: rgba(124,92,252,0.15);  border: 1px solid rgba(124,92,252,0.3);  color: #a98eff; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ─── FEED TOOLBAR ─── */
+  .feed-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .feed-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .feed-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background: rgba(124,92,252,0.12);
+    border: 1px solid rgba(124,92,252,0.25);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #a98eff;
+    font-weight: 500;
+    margin-left: 10px;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { color: var(--text); border-color: var(--muted); }
+  .filter-chip.active {
+    background: rgba(240,192,64,0.1);
+    border-color: rgba(240,192,64,0.35);
+    color: var(--accent);
+  }
+
+  /* ─── IDEA CARDS ─── */
+  .ideas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .idea-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.25s;
+    cursor: pointer;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .idea-card:hover {
+    border-color: rgba(124,92,252,0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  }
+
+  .idea-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .status-pending    { background: rgba(240,192,64,0.12); color: var(--pending); border: 1px solid rgba(240,192,64,0.25); }
+  .status-active     { background: rgba(62,207,142,0.12); color: var(--active);  border: 1px solid rgba(62,207,142,0.25); }
+  .status-shortlisted{ background: rgba(124,92,252,0.12); color: #a98eff;        border: 1px solid rgba(124,92,252,0.25); }
+  .status-funded     { background: rgba(62,207,142,0.15); color: var(--success); border: 1px solid rgba(62,207,142,0.3); }
+  .status-rejected   { background: rgba(255,107,107,0.1); color: var(--danger);  border: 1px solid rgba(255,107,107,0.2); }
+
+  .idea-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  .idea-desc {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .idea-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .category-tag {
+    padding: 3px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .idea-date {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .idea-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── STAR RATING ─── */
+  .stars {
+    display: flex;
+    gap: 3px;
+  }
+  .star {
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.1s, color 0.1s;
+    line-height: 1;
+    color: var(--border);
+  }
+  .star.active, .star.hover { color: var(--accent); }
+  .star:hover { transform: scale(1.2); }
+  .star.rated { cursor: default; }
+  .star.rated:hover { transform: none; }
+
+  .rating-info {
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rating-score { color: var(--accent); font-weight: 700; }
+
+  /* ─── MODAL / DETAIL ─── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    animation: fadeIn 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: scaleIn 0.25s ease;
+    position: relative;
+  }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--muted); }
+
+  .modal-status { margin-bottom: 12px; }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    padding-right: 40px;
+  }
+  .modal-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .modal-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .modal-rating-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .rating-label { font-size: 0.9rem; color: var(--muted); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+  .empty h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+  .empty p { font-size: 0.9rem; }
+
+  /* ─── SKELETON ─── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  /* ─── STATS BAR ─── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* ─── BACKEND NOTE ─── */
+  .backend-note {
+    background: rgba(124,92,252,0.08);
+    border: 1px solid rgba(124,92,252,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    color: #a98eff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .ideas-grid { grid-template-columns: 1fr; }
+    .navbar { padding: 0 1rem; }
+    .main { padding: 0 1rem 60px; }
+    .hero { padding: 40px 1rem 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ──────────────────────────────────────────────
+// CONFIG — Change this to your Spring Boot URL
+// ──────────────────────────────────────────────
+const BASE_URL = "http://localhost:8080";
+
+// ──────────────────────────────────────────────
+// API LAYER (matches your actual Spring Boot endpoints)
+// ──────────────────────────────────────────────
+const api = {
+  // GET /api/ideas
+  getAllIdeas: () =>
+    fetch(`${BASE_URL}/api/ideas`).then(r => {
+      if (!r.ok) throw new Error("Failed to fetch ideas");
+      return r.json();
+    }),
+
+  // POST /api/ideas
+  createIdea: (idea) =>
+    fetch(`${BASE_URL}/api/ideas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(idea),
+    }).then(r => {
+      if (!r.ok) throw new Error("Failed to submit idea");
+      return r.json();
+    }),
+
+  // GET /api/ideas/:id
+  getIdea: (id) =>
+    fetch(`${BASE_URL}/api/ideas/${id}`).then(r => {
+      if (!r.ok) throw new Error("Idea not found");
+      return r.json();
+    }),
+
+  // DELETE /api/ideas/:id
+  deleteIdea: (id) =>
+    fetch(`${BASE_URL}/api/ideas/${id}`, { method: "DELETE" }).then(r => {
+      if (!r.ok) throw new Error("Failed to delete");
+    }),
+};
+
+// ──────────────────────────────────────────────
+// SAMPLE DATA (used when backend is offline)
+// ──────────────────────────────────────────────
+const SAMPLE_IDEAS = [
+  {
+    ideaId: 1,
+    title: "AI-Powered Campus Navigation",
+    description: "A mobile app that uses AR and AI to help new students navigate the campus, find classrooms, and discover facilities. Integrates with the timetable to suggest optimal routes between classes.",
+    category: "EdTech",
+    status: "shortlisted",
+    submittedAt: "2026-03-20T10:00:00",
+    student: { userId: 1, name: "Priya Sharma" },
+    localRating: 4,
+  },
+  {
+    ideaId: 2,
+    title: "Student Mental Health Tracker",
+    description: "An anonymous platform where students can log their mood daily. The system uses ML to detect patterns and alert counselors when a student might need support.",
+    category: "Health",
+    status: "active",
+    submittedAt: "2026-03-22T14:30:00",
+    student: { userId: 2, name: "Amit Verma" },
+    localRating: 5,
+  },
+  {
+    ideaId: 3,
+    title: "Skill-Share Marketplace",
+    description: "A platform where students can offer skills (coding, music, cooking) and earn credits redeemable in the college canteen or library. Encourages peer-to-peer learning.",
+    category: "Social",
+    status: "pending",
+    submittedAt: "2026-03-25T09:15:00",
+    student: { userId: 3, name: "Neha Singh" },
+    localRating: 3,
+  },
+  {
+    ideaId: 4,
+    title: "Green Campus Energy Monitor",
+    description: "IoT sensors placed around the campus track electricity and water usage in real time. A dashboard shows departments how to reduce waste and compete for the 'Greenest Department' badge.",
+    category: "Sustainability",
+    status: "funded",
+    submittedAt: "2026-03-10T11:00:00",
+    student: { userId: 4, name: "Rohan Gupta" },
+    localRating: 5,
+  },
+  {
+    ideaId: 5,
+    title: "Lost & Found AI Matcher",
+    description: "Upload a photo of a lost item. AI matches it against the found items database and notifies both parties. Solves the classic campus lost-and-found problem.",
+    category: "Utility",
+    status: "pending",
+    submittedAt: "2026-03-27T16:45:00",
+    student: { userId: 5, name: "Sakshi Jain" },
+    localRating: 0,
+  },
+];
+
+// ──────────────────────────────────────────────
+// TOAST COMPONENT
+// ──────────────────────────────────────────────
+function Toasts({ toasts }) {
+  return (
+    <div className="toast-wrap">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast toast-${t.type}`}>
+          <span>{t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}</span>
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// STAR RATING COMPONENT
+// ──────────────────────────────────────────────
+function StarRating({ value, onChange, readonly = false, size = "normal" }) {
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div className="stars">
+      {[1,2,3,4,5].map(n => (
+        <span
+          key={n}
+          className={`star ${n <= (hovered || value) ? 'active' : ''} ${readonly ? 'rated' : ''}`}
+          style={{ fontSize: size === 'large' ? '1.5rem' : '1.2rem' }}
+          onClick={() => !readonly && onChange && onChange(n)}
+          onMouseEnter={() => !readonly && setHovered(n)}
+          onMouseLeave={() => !readonly && setHovered(0)}
+        >★</span>
+      ))}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// IDEA DETAIL MODAL
+// ──────────────────────────────────────────────
+function IdeaModal({ idea, onClose, onDelete, onRate }) {
+  const [localRating, setLocalRating] = useState(idea.localRating || 0);
+  const [rated, setRated] = useState(idea.localRating > 0);
+
+  const handleRate = (score) => {
+    if (rated) return;
+    setLocalRating(score);
+    setRated(true);
+    onRate(idea.ideaId, score);
+  };
+
+  const formatDate = (ts) => {
+    if (!ts) return "Unknown";
+    return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <button className="modal-close" onClick={onClose}>✕</button>
+
+        <div className="modal-status">
+          <span className={`status-badge status-${idea.status}`}>{idea.status}</span>
+        </div>
+
+        <h2 className="modal-title">{idea.title}</h2>
+        <p className="modal-desc">{idea.description}</p>
+
+        <div className="modal-meta">
+          {idea.category && <span className="category-tag">📁 {idea.category}</span>}
+          {idea.student?.name && <span className="category-tag">👤 {idea.student.name}</span>}
+          <span className="category-tag">📅 {formatDate(idea.submittedAt)}</span>
+          <span className="category-tag">🆔 Idea #{idea.ideaId}</span>
+        </div>
+
+        <div className="modal-section-title">Rate this idea</div>
+        <div className="modal-rating-wrap">
+          <StarRating value={localRating} onChange={handleRate} readonly={rated} size="large" />
+          <span className="rating-label">
+            {rated
+              ? <span style={{color:'var(--success)'}}>✓ You rated {localRating}/5</span>
+              : <span>Click to rate</span>
+            }
+          </span>
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          <button className="btn btn-danger" onClick={() => { onDelete(idea.ideaId); onClose(); }}>
+            🗑 Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// IDEA CARD
+// ──────────────────────────────────────────────
+function IdeaCard({ idea, onClick, index }) {
+  const formatDate = (ts) => {
+    if (!ts) return "";
+    return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
+  return (
+    <div
+      className="idea-card"
+      onClick={onClick}
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      <div className="idea-card-top">
+        <h3 className="idea-title">{idea.title}</h3>
+        <span className={`status-badge status-${idea.status}`}>{idea.status}</span>
+      </div>
+
+      <p className="idea-desc">{idea.description}</p>
+
+      <div className="idea-meta">
+        {idea.category && <span className="category-tag">{idea.category}</span>}
+        {idea.student?.name && <span className="category-tag">👤 {idea.student.name}</span>}
+        <span className="idea-date">{formatDate(idea.submittedAt)}</span>
+      </div>
+
+      <div className="idea-footer">
+        <StarRating value={idea.localRating || 0} readonly size="normal" />
+        <span className="rating-info">
+          {idea.localRating > 0
+            ? <><span className="rating-score">{idea.localRating}</span>/5</>
+            : <span>Not rated</span>
+          }
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// IDEA FEED
+// ──────────────────────────────────────────────
+function IdeaFeed({ ideas, loading, onSelect }) {
+  const [filter, setFilter] = useState("all");
+
+  const STATUS_FILTERS = ["all", "pending", "active", "shortlisted", "funded", "rejected"];
+
+  const filtered = filter === "all"
+    ? ideas
+    : ideas.filter(i => i.status === filter);
+
+  if (loading) {
+    return (
+      <div className="ideas-grid">
+        {[1,2,3,4].map(n => (
+          <div key={n} className="card" style={{padding:'22px', display:'flex', flexDirection:'column', gap:'14px'}}>
+            <div className="skeleton" style={{height:'20px', width:'70%'}}/>
+            <div className="skeleton" style={{height:'60px'}}/>
+            <div className="skeleton" style={{height:'14px', width:'40%'}}/>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="feed-toolbar">
+        <div>
+          <span className="feed-title">All Ideas</span>
+          <span className="feed-count">{filtered.length}</span>
+        </div>
+        <div className="filter-bar">
+          {STATUS_FILTERS.map(s => (
+            <button
+              key={s}
+              className={`filter-chip ${filter === s ? 'active' : ''}`}
+              onClick={() => setFilter(s)}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="empty">
+          <div className="empty-icon">💡</div>
+          <h3>No ideas here yet</h3>
+          <p>Be the first to submit an idea in this category!</p>
+        </div>
+      ) : (
+        <div className="ideas-grid">
+          {filtered.map((idea, i) => (
+            <IdeaCard
+              key={idea.ideaId}
+              idea={idea}
+              index={i}
+              onClick={() => onSelect(idea)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// SUBMIT FORM
+// ──────────────────────────────────────────────
+function IdeaForm({ onSubmit, loading }) {
+  const [form, setForm] = useState({
+    title: "", description: "", category: "", studentName: "", studentId: ""
+  });
+
+  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+  const canSubmit = form.title.trim() && form.description.trim() && !loading;
+
+  const handleSubmit = () => {
+    // Build request body matching your Spring Boot Idea entity
+    const payload = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      category: form.category || null,
+      status: "pending",
+      student: form.studentId
+        ? { userId: parseInt(form.studentId) }
+        : null,
+    };
+    onSubmit(payload, form.studentName);
+  };
+
+  const handleReset = () => setForm({ title: "", description: "", category: "", studentName: "", studentId: "" });
+
+  return (
+    <div className="card">
+      <div className="form-header">
+        <div className="form-header-icon">💡</div>
+        <div>
+          <h2>Submit Your Idea</h2>
+          <p>Fill out the form below to validate your startup idea</p>
+        </div>
+      </div>
+
+      <div className="backend-note">
+        <span>🔌</span>
+        Connects to: <code style={{fontSize:'0.8rem', opacity:0.8}}>POST /api/ideas</code> on your Spring Boot backend at <code style={{fontSize:'0.8rem', opacity:0.8}}>{BASE_URL}</code>
+      </div>
+
+      <div className="form-grid">
+        <div className="field form-full">
+          <label>Idea Title *</label>
+          <input
+            type="text"
+            placeholder="e.g. AI-Powered Campus Navigation"
+            value={form.title}
+            onChange={set("title")}
+            maxLength={200}
+          />
+          <span className="char-count">{form.title.length}/200</span>
+        </div>
+
+        <div className="field form-full">
+          <label>Description *</label>
+          <textarea
+            placeholder="Describe your idea in detail — what problem does it solve? How does it work?"
+            value={form.description}
+            onChange={set("description")}
+          />
+        </div>
+
+        <div className="field">
+          <label>Category</label>
+          <select value={form.category} onChange={set("category")}>
+            <option value="">Select a category…</option>
+            <option>EdTech</option>
+            <option>Health</option>
+            <option>Sustainability</option>
+            <option>Social</option>
+            <option>Utility</option>
+            <option>FinTech</option>
+            <option>AI / ML</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div className="field">
+          <label>Student Name</label>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={form.studentName}
+            onChange={set("studentName")}
+          />
+        </div>
+
+        <div className="field">
+          <label>Student ID (user_id from DB)</label>
+          <input
+            type="number"
+            placeholder="e.g. 1"
+            value={form.studentId}
+            onChange={set("studentId")}
+          />
+        </div>
+      </div>
+
+      <div style={{ display:'flex', gap:'10px', marginTop:'20px', justifyContent:'flex-end' }}>
+        <button className="btn btn-ghost" onClick={handleReset}>Clear</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit}>
+          {loading ? '⏳ Submitting…' : '🚀 Submit Idea'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// STATS BAR
+// ──────────────────────────────────────────────
+function StatsBar({ ideas }) {
+  const counts = ideas.reduce((acc, idea) => {
+    acc[idea.status] = (acc[idea.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (
+    <div className="stats-bar">
+      <div className="stat-item">
+        <div className="stat-value">{ideas.length}</div>
+        <div className="stat-label">Total Ideas</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-value" style={{color:'var(--pending)'}}>{counts.pending || 0}</div>
+        <div className="stat-label">Pending</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-value" style={{color:'#a98eff'}}>{counts.shortlisted || 0}</div>
+        <div className="stat-label">Shortlisted</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-value" style={{color:'var(--success)'}}>{counts.funded || 0}</div>
+        <div className="stat-label">Funded</div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// MAIN APP
+// ──────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState("feed");
+  const [ideas, setIdeas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const [backendOnline, setBackendOnline] = useState(null);
+  const toastId = useRef(0);
+
+  const addToast = (msg, type = "success") => {
+    const id = ++toastId.current;
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
+  };
+
+  // Load ideas — tries real backend first, falls back to sample data
+  const loadIdeas = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.getAllIdeas();
+      // Add localRating field if not present
+      setIdeas(data.map(i => ({ ...i, localRating: i.localRating || 0 })));
+      setBackendOnline(true);
+    } catch (err) {
+      console.warn("Backend offline, using sample data:", err);
+      setIdeas(SAMPLE_IDEAS);
+      setBackendOnline(false);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadIdeas(); }, [loadIdeas]);
+
+  // Submit idea
+  const handleSubmit = async (payload, studentName) => {
+    setSubmitLoading(true);
+    try {
+      if (backendOnline) {
+        const newIdea = await api.createIdea(payload);
+        setIdeas(prev => [{ ...newIdea, localRating: 0 }, ...prev]);
+        addToast("Idea submitted successfully!", "success");
+      } else {
+        // Demo mode: add locally
+        const fake = {
+          ...payload,
+          ideaId: Date.now(),
+          submittedAt: new Date().toISOString(),
+          localRating: 0,
+          student: { userId: payload.student?.userId || 0, name: studentName || "You" },
+        };
+        setIdeas(prev => [fake, ...prev]);
+        addToast("Idea added (demo mode — backend offline)", "info");
+      }
+      setTab("feed");
+    } catch (err) {
+      addToast("Failed to submit: " + err.message, "error");
+    }
+    setSubmitLoading(false);
+  };
+
+  // Delete idea
+  const handleDelete = async (id) => {
+    try {
+      if (backendOnline) await api.deleteIdea(id);
+      setIdeas(prev => prev.filter(i => i.ideaId !== id));
+      addToast("Idea deleted.", "success");
+    } catch (err) {
+      addToast("Failed to delete: " + err.message, "error");
+    }
+  };
+
+  // Rate idea (stored locally — needs a /rate endpoint on backend)
+  const handleRate = (id, score) => {
+    setIdeas(prev => prev.map(i => i.ideaId === id ? { ...i, localRating: score } : i));
+    addToast(`Rated ${score}/5 ⭐ (local only — add POST /api/ideas/${id}/rate to backend)`, "info");
+  };
+
+  return (
+    <>
+      <Toasts toasts={toasts} />
+
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="logo">
+          <div className="logo-dot"/>
+          <span>SPARK</span>
+        </div>
+        <div className="nav-tabs">
+          <button className={`nav-tab ${tab === 'feed' ? 'active' : ''}`} onClick={() => setTab('feed')}>
+            🏠 Feed
+          </button>
+          <button className={`nav-tab ${tab === 'submit' ? 'active' : ''}`} onClick={() => setTab('submit')}>
+            ✦ Submit Idea
+          </button>
+        </div>
+        <div style={{fontSize:'0.75rem', color: backendOnline === null ? 'var(--muted)' : backendOnline ? 'var(--success)' : 'var(--danger)'}}>
+          {backendOnline === null ? '⏳ connecting…' : backendOnline ? '🟢 Backend live' : '🔴 Demo mode'}
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-tag">✦ Student Idea Validation Platform</div>
+        <h1>Turn your ideas into<br/><em>real impact</em></h1>
+        <p>Submit, discover, and rate student startup ideas. The best ones get funded.</p>
+      </div>
+
+      {/* Main content */}
+      <main className="main">
+        {tab === 'feed' ? (
+          <>
+            <StatsBar ideas={ideas} />
+            <IdeaFeed ideas={ideas} loading={loading} onSelect={setSelected} />
+          </>
+        ) : (
+          <IdeaForm onSubmit={handleSubmit} loading={submitLoading} />
+        )}
+      </main>
+
+      {/* Detail modal */}
+      {selected && (
+        <IdeaModal
+          idea={selected}
+          onClose={() => setSelected(null)}
+          onDelete={handleDelete}
+          onRate={handleRate}
+        />
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
